@@ -1,10 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ShoppingCart, Sparkles, Copy, Check, Trash2, GlassWater, Zap, Crown, CupSoda } from 'lucide-react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCoverflow, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/effect-coverflow';
 
 // ════ ICONO OFICIAL DE WHATSAPP (SVG) ════
 const WhatsAppIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
@@ -20,18 +16,18 @@ const WhatsAppIcon = ({ size = 24, className = "" }: { size?: number; className?
   </svg>
 );
 
-// Variantes de Animación
-const fadeInUp = {
+// Variantes de Animación (Corregido el tipado estricto)
+const fadeInUp: any = {
   hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
 };
 
-const staggerContainer = {
+const staggerContainer: any = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 
-// Bases de datos de productos (Iconos de Lucide relacionados)
+// Bases de datos de productos
 const MICHELADAS = [
   { name: "Monky Clásica", price: 11000, color: "border-neon-blue", iconColor: "text-neon-blue", glow: "hover:shadow-[0_0_30px_rgba(0,191,255,0.3)]", icon: GlassWater },
   { name: "Monky Mix", price: 13000, color: "border-neon-pink", iconColor: "text-neon-pink", glow: "hover:shadow-[0_0_30px_rgba(255,0,184,0.3)]", icon: Zap },
@@ -62,7 +58,7 @@ export default function App() {
   const [copiedNequi, setCopiedNequi] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
 
-  const nequiNumber = "3118894341";
+  const nequiNumber = "3125276355";
 
   const addToCart = (name: string, price: number) => {
     const newItem = { id: Math.random().toString(), name, price };
@@ -366,7 +362,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* ════ ICONO FLOTANTE OFICIAL DE WHATSAPP (CUANDO EL CARRITO ESTÁ VACÍO) ════ */}
+      {/* ════ ICONO FLOTANTE OFICIAL DE WHATSAPP ════ */}
       <AnimatePresence>
         {cart.length === 0 && (
           <motion.a 
