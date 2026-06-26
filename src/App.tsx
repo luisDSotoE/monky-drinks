@@ -16,7 +16,7 @@ const WhatsAppIcon = ({ size = 24, className = "" }: { size?: number; className?
   </svg>
 );
 
-// Variantes de Animación (Corregido el tipado estricto)
+// Variantes de Animación
 const fadeInUp: any = {
   hidden: { opacity: 0, y: 50 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
@@ -58,7 +58,8 @@ export default function App() {
   const [copiedNequi, setCopiedNequi] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
 
-  const nequiNumber = "3125276355";
+  // ══════════════ AQUÍ SE CAMBIÓ EL NÚMERO ══════════════
+  const nequiNumber = "3118894341";
 
   const addToCart = (name: string, price: number) => {
     const newItem = { id: Math.random().toString(), name, price };
