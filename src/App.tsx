@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ShoppingCart, Sparkles, Copy, Check, Trash2, GlassWater, Zap, Crown, CupSoda, X } from 'lucide-react';
+import { MapPin, ShoppingCart, Sparkles, Copy, Check, Trash2, X } from 'lucide-react'; // Quitamos los iconos viejos de bebidas
 
 // ════ ICONO OFICIAL DE WHATSAPP (SVG) ════
 const WhatsAppIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
@@ -27,12 +27,12 @@ const staggerContainer: any = {
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 
-// Bases de datos de productos
+// ════ BASES DE DATOS ACTUALIZADAS CON TUS IMÁGENES ════
 const MICHELADAS = [
-  { name: "Monky Clásica", price: 11000, color: "border-neon-blue", iconColor: "text-neon-blue", glow: "hover:shadow-[0_0_30px_rgba(0,191,255,0.3)]", icon: GlassWater },
-  { name: "Monky Mix", price: 13000, color: "border-neon-pink", iconColor: "text-neon-pink", glow: "hover:shadow-[0_0_30px_rgba(255,0,184,0.3)]", icon: Zap },
-  { name: "Monky Supreme", price: 16000, color: "border-neon-purple", iconColor: "text-neon-purple", glow: "hover:shadow-[0_0_30px_rgba(138,43,226,0.3)]", icon: Crown },
-  { name: "Monky Lata", price: 18000, color: "border-neon-green", iconColor: "text-neon-green", glow: "hover:shadow-[0_0_30px_rgba(57,255,20,0.3)]", icon: CupSoda }
+  { name: "Monky Clásica", price: 11000, color: "border-neon-blue", glow: "hover:shadow-[0_0_30px_rgba(0,191,255,0.3)]", image: "/Monky Clasica.jpeg" },
+  { name: "Monky Mix", price: 13000, color: "border-neon-pink", glow: "hover:shadow-[0_0_30px_rgba(255,0,184,0.3)]", image: "/Monky Mix.jpeg" },
+  { name: "Monky Supreme", price: 16000, color: "border-neon-purple", glow: "hover:shadow-[0_0_30px_rgba(138,43,226,0.3)]", image: "/Monky Suprem.jpeg" },
+  { name: "Monky Lata", price: 18000, color: "border-neon-green", glow: "hover:shadow-[0_0_30px_rgba(57,255,20,0.3)]", image: "/Monky lata.jpeg" }
 ];
 
 const ENCHILADAS = [
@@ -47,7 +47,6 @@ const EXTRAS = [
   { name: "Perlas Explosivas", price: 5000 }
 ];
 
-// Opciones de Personalización de Micheladas
 const FLAVORS = [
   { name: "Rojo Explosivo", color: "text-red-500", border: "border-red-500", bg: "bg-red-500/20" },
   { name: "Verde Salvaje", color: "text-neon-green", border: "border-neon-green", bg: "bg-emerald-500/20" },
@@ -55,7 +54,6 @@ const FLAVORS = [
   { name: "Azul Blueberry", color: "text-blue-500", border: "border-blue-500", bg: "bg-blue-500/20" }
 ];
 
-// Lista de bebidas informativas (solo visual)
 const INFO_BEVERAGES = ["Corona", "Ginger", "Soda", "Like", "Cuates"];
 
 const BEVERAGES = {
@@ -80,7 +78,6 @@ export default function App() {
   const [copiedNequi, setCopiedNequi] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
 
-  // Estado para el Modal de Micheladas
   const [selectedMich, setSelectedMich] = useState<SelectedMich | null>(null);
   const [selectedFlavor, setSelectedFlavor] = useState<string>('');
   const [selectedBev, setSelectedBev] = useState<string>('');
@@ -133,7 +130,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen text-white select-none pb-24 overflow-x-hidden">
+    <div className="relative min-h-screen text-white select-none overflow-x-hidden">
       <div className="particles-bg"></div>
 
       {/* ════ MODAL DE PERSONALIZACIÓN DE MICHELADAS ════ */}
@@ -253,7 +250,7 @@ export default function App() {
         </motion.div>
       </section>
 
-      {/* ════ SECCIÓN MENÚ (MICHELADAS) ════ */}
+      {/* ════ SECCIÓN MENÚ (MICHELADAS CON FOTOS) ════ */}
       <section id="menu" className="pt-24 pb-8 px-4 max-w-7xl mx-auto relative">
         <motion.h2 
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
@@ -271,8 +268,13 @@ export default function App() {
               key={idx} variants={fadeInUp} whileHover={{ scale: 1.05, y: -12 }}
               className={`glass-panel rounded-3xl p-8 border-t-4 ${item.color} flex flex-col items-center justify-between group transition-all duration-300 ${item.glow}`}
             >
-              <div className="w-24 h-24 rounded-full bg-black/60 mb-6 flex items-center justify-center border border-white/10 transition-colors shadow-inner group-hover:bg-white/5">
-                <item.icon size={44} className={`${item.iconColor} opacity-80 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110 drop-shadow-[0_0_8px_currentColor]`} />
+              {/* Aquí cambiamos el icono por la FOTO */}
+              <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-black/60 mb-6 flex items-center justify-center border-2 border-white/10 overflow-hidden transition-all shadow-inner group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                <img 
+                  src={item.image} 
+                  alt={item.name} 
+                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-transform duration-500 group-hover:scale-110"
+                />
               </div>
 
               <h3 className="text-3xl font-bebas tracking-wide mb-2 text-center group-hover:text-neon-yellow transition-colors">{item.name}</h3>
@@ -333,14 +335,31 @@ export default function App() {
           </div>
         </div>
       </section>
+
       {/* ════ MONKY ENCHILADAS ════ */}
       <section className="py-24 px-4 max-w-5xl mx-auto">
         <motion.h2 
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
-          className="text-6xl md:text-7xl font-bebas text-center text-neon-orange text-glow-orange mb-16"
+          className="text-6xl md:text-7xl font-bebas text-center text-neon-orange text-glow-orange mb-8 md:mb-10"
         >
           MONKY ENCHILADAS
         </motion.h2>
+
+        {/* FOTO DESTACADA DE ENCHILADAS */}
+        <motion.div 
+          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+          className="w-full max-w-2xl mx-auto mb-12 rounded-3xl overflow-hidden border border-neon-orange/30 shadow-[0_0_40px_rgba(255,115,0,0.15)] relative group bg-black/50"
+        >
+          <img 
+            src="/Monky enchilada.jpeg" 
+            alt="Monky Enchiladas" 
+            className="w-full h-auto max-h-[350px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100"
+          />
+          {/* Sombra difuminada abajo para que se mezcle con el fondo oscuro */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent pointer-events-none"></div>
+        </motion.div>
+
+        {/* BOTONES DE SABORES */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5 font-poppins">
           {ENCHILADAS.map((item, idx) => (
             <motion.div 
