@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ShoppingCart, Sparkles, Copy, Check, Trash2, GlassWater, Zap, Crown, CupSoda } from 'lucide-react';
+import { MapPin, ShoppingCart, Sparkles, Copy, Check, Trash2, GlassWater, Zap, Crown, CupSoda, X } from 'lucide-react';
 
 // ════ ICONO OFICIAL DE WHATSAPP (SVG) ════
 const WhatsAppIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
@@ -47,8 +47,30 @@ const EXTRAS = [
   { name: "Perlas Explosivas", price: 5000 }
 ];
 
+// Opciones de Personalización de Micheladas
+const FLAVORS = [
+  { name: "Rojo Explosivo", color: "text-red-500", border: "border-red-500", bg: "bg-red-500/20" },
+  { name: "Verde Salvaje", color: "text-neon-green", border: "border-neon-green", bg: "bg-emerald-500/20" },
+  { name: "Amarillo Tropical", color: "text-neon-yellow", border: "border-neon-yellow", bg: "bg-amber-500/20" },
+  { name: "Azul Blueberry", color: "text-blue-500", border: "border-blue-500", bg: "bg-blue-500/20" }
+];
+
+// Lista de bebidas informativas (solo visual)
+const INFO_BEVERAGES = ["Corona", "Ginger", "Soda", "Like", "Cuates"];
+
+const BEVERAGES = {
+  "Monky Clásica": ["Ginger", "Soda"],
+  "Monky Mix": ["Ginger", "Soda", "Like", "Cuates", "Corona"],
+  "Monky Supreme": ["Ginger", "Soda", "Like", "Cuates", "Corona"]
+};
+
 interface CartItem {
   id: string;
+  name: string;
+  price: number;
+}
+
+interface SelectedMich {
   name: string;
   price: number;
 }
@@ -58,7 +80,11 @@ export default function App() {
   const [copiedNequi, setCopiedNequi] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
 
-  // ══════════════ AQUÍ SE CAMBIÓ EL NÚMERO ══════════════
+  // Estado para el Modal de Micheladas
+  const [selectedMich, setSelectedMich] = useState<SelectedMich | null>(null);
+  const [selectedFlavor, setSelectedFlavor] = useState<string>('');
+  const [selectedBev, setSelectedBev] = useState<string>('');
+
   const nequiNumber = "3118894341";
 
   const addToCart = (name: string, price: number) => {
@@ -78,6 +104,19 @@ export default function App() {
     setTimeout(() => setCopiedNequi(false), 2000);
   };
 
+  const openMichModal = (mich: SelectedMich) => {
+    setSelectedMich(mich);
+    setSelectedFlavor('');
+    setSelectedBev('');
+  };
+
+  const confirmMichToCart = () => {
+    if (!selectedFlavor || !selectedBev || !selectedMich) return;
+    const finalName = `${selectedMich.name} (${selectedFlavor} - ${selectedBev})`;
+    addToCart(finalName, selectedMich.price);
+    setSelectedMich(null);
+  };
+
   const getWhatsAppLink = () => {
     if (cart.length === 0) {
       return `https://wa.me/57${nequiNumber}?text=${encodeURIComponent("¡Hola! Quiero pedir una Monky.")}`;
@@ -94,8 +133,80 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen text-white select-none pb-24">
+    <div className="relative min-h-screen text-white select-none pb-24 overflow-x-hidden">
       <div className="particles-bg"></div>
+
+      {/* ════ MODAL DE PERSONALIZACIÓN DE MICHELADAS ════ */}
+      <AnimatePresence>
+        {selectedMich && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#0a0a0a] border border-white/10 shadow-[0_0_40px_rgba(255,0,127,0.15)] rounded-3xl p-6 md:p-8 w-full max-w-md relative font-poppins"
+            >
+              <button 
+                onClick={() => setSelectedMich(null)} 
+                className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors bg-white/5 p-2 rounded-full hover:bg-white/10"
+              >
+                <X size={20}/>
+              </button>
+              
+              <h3 className="text-3xl font-bebas text-neon-yellow mb-2 pr-8 leading-none">
+                {selectedMich.name}
+              </h3>
+              <p className="text-gray-400 text-sm mb-6 pb-4 border-b border-white/10">Personaliza tu bebida para continuar</p>
+              
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="bg-white/10 w-5 h-5 rounded-full flex items-center justify-center text-white">1</span>
+                  Elige tu sabor
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                   {FLAVORS.map(f => (
+                     <button 
+                       key={f.name} 
+                       onClick={() => setSelectedFlavor(f.name)} 
+                       className={`p-3 rounded-xl border ${selectedFlavor === f.name ? f.border + ' ' + f.bg : 'border-white/5 bg-white/5 hover:border-white/20'} transition-all text-sm font-bold flex items-center justify-center text-center h-16`}
+                     >
+                       <span className={selectedFlavor === f.name ? f.color : 'text-gray-300'}>{f.name}</span>
+                     </button>
+                   ))}
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="bg-white/10 w-5 h-5 rounded-full flex items-center justify-center text-white">2</span>
+                  Elige tu bebida
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                   {BEVERAGES[selectedMich.name as keyof typeof BEVERAGES]?.map(b => (
+                     <button 
+                       key={b} 
+                       onClick={() => setSelectedBev(b)} 
+                       className={`px-5 py-2.5 rounded-full border ${selectedBev === b ? 'border-neon-blue bg-neon-blue/20 text-neon-blue' : 'border-white/5 bg-white/5 text-gray-300 hover:border-white/20'} transition-all text-sm font-bold`}
+                     >
+                       {b}
+                     </button>
+                   ))}
+                </div>
+              </div>
+
+              <button 
+                onClick={confirmMichToCart}
+                disabled={!selectedFlavor || !selectedBev}
+                className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${(!selectedFlavor || !selectedBev) ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5' : 'bg-neon-pink text-white hover:bg-[#e60073] shadow-[0_0_20px_rgba(255,0,127,0.4)] border border-transparent'}`}
+              >
+                <ShoppingCart size={20} />
+                Confirmar y Agregar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ════ SECCIÓN HERO ════ */}
       <section className="relative flex flex-col items-center justify-center min-h-screen text-center px-4 pt-16 pb-10">
@@ -143,7 +254,7 @@ export default function App() {
       </section>
 
       {/* ════ SECCIÓN MENÚ (MICHELADAS) ════ */}
-      <section id="menu" className="py-24 px-4 max-w-7xl mx-auto relative">
+      <section id="menu" className="pt-24 pb-8 px-4 max-w-7xl mx-auto relative">
         <motion.h2 
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
           className="text-6xl md:text-7xl font-bebas text-center text-neon-yellow text-glow-yellow mb-16"
@@ -168,31 +279,60 @@ export default function App() {
               <p className="text-2xl font-black text-gray-200 mb-8 tracking-tight">${item.price.toLocaleString('es-CO')}</p>
               
               <button 
-                onClick={() => addToCart(item.name, item.price)}
+                onClick={() => {
+                  if (item.name === "Monky Lata") {
+                    addToCart(item.name, item.price);
+                  } else {
+                    openMichModal(item);
+                  }
+                }}
                 className="w-full py-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 group-hover:border-none group-hover:bg-gradient-to-r group-hover:from-neon-blue group-hover:to-neon-pink text-sm font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
               >
-                <ShoppingCart size={18} /> Agregar al Pedido
+                <ShoppingCart size={18} /> 
+                {item.name === "Monky Lata" ? "Añadir" : "Personalizar"}
               </button>
             </motion.div>
           ))}
         </motion.div>
       </section>
 
-      {/* ════ SABORES ════ */}
-      <section className="py-8 px-4 font-poppins">
+      {/* ════ SABORES INFORMATIVOS ════ */}
+      <section className="pt-8 pb-4 px-4 font-poppins">
         <div className="flex flex-wrap justify-center gap-5 max-w-4xl mx-auto">
-          <motion.div whileHover={{ scale: 1.08 }} className="px-8 py-3 rounded-full border border-red-500 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)] font-bold text-base bg-red-950/20 backdrop-blur-md cursor-pointer tracking-wide uppercase">
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-red-500 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] font-bold text-sm bg-red-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
             🔥 Rojo Explosivo
           </motion.div>
-          <motion.div whileHover={{ scale: 1.08 }} className="px-8 py-3 rounded-full border border-neon-green text-neon-green box-glow-green font-bold text-base bg-emerald-950/20 backdrop-blur-md cursor-pointer tracking-wide uppercase">
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-neon-green text-neon-green box-glow-green font-bold text-sm bg-emerald-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
             🍃 Verde Salvaje
           </motion.div>
-          <motion.div whileHover={{ scale: 1.08 }} className="px-8 py-3 rounded-full border border-neon-yellow text-neon-yellow shadow-[0_0_20px_rgba(255,214,0,0.4)] font-bold text-base bg-amber-950/20 backdrop-blur-md cursor-pointer tracking-wide uppercase">
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-neon-yellow text-neon-yellow shadow-[0_0_15px_rgba(255,214,0,0.3)] font-bold text-sm bg-amber-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
             🌴 Amarillo Tropical
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] font-bold text-sm bg-blue-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
+            🫐 Azul Blueberry
           </motion.div>
         </div>
       </section>
 
+      {/* ════ BEBIDAS INFORMATIVAS ════ */}
+      <section className="pb-16 pt-4 px-2 font-poppins">
+        <div className="flex flex-col items-center justify-center text-center">
+          <p className="text-gray-200 font-bebas text-xl md:text-2xl tracking-widest uppercase mb-5 drop-shadow-md">
+            Acompaña tu michelada con:
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 max-w-2xl mx-auto">
+            {INFO_BEVERAGES.map((bev) => (
+              <motion.div 
+                key={bev}
+                whileHover={{ scale: 1.05 }} 
+                className="px-6 py-2.5 md:px-8 md:py-3 rounded-full border border-white/20 text-white font-extrabold text-sm md:text-base bg-white/10 backdrop-blur-md shadow-lg cursor-default tracking-widest uppercase"
+              >
+                {bev}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
       {/* ════ MONKY ENCHILADAS ════ */}
       <section className="py-24 px-4 max-w-5xl mx-auto">
         <motion.h2 
@@ -307,7 +447,7 @@ export default function App() {
         {cart.length > 0 && (
           <motion.div 
             initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
-            className="fixed bottom-0 left-0 w-full z-50 bg-black/90 backdrop-blur-xl border-t-2 border-neon-green shadow-[0_-10px_30px_rgba(57,255,20,0.15)] font-poppins rounded-t-3xl"
+            className="fixed bottom-0 left-0 w-full z-40 bg-black/90 backdrop-blur-xl border-t-2 border-neon-green shadow-[0_-10px_30px_rgba(57,255,20,0.15)] font-poppins rounded-t-3xl"
           >
             <AnimatePresence>
               {isCartOpen && (
@@ -319,9 +459,9 @@ export default function App() {
                   <div className="flex flex-col gap-3 max-w-2xl mx-auto">
                     {cart.map((item) => (
                       <div key={item.id} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                        <span className="text-sm font-semibold">{item.name}</span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-gray-300 font-mono">${item.price.toLocaleString('es-CO')}</span>
+                        <span className="text-sm font-semibold truncate pr-4">{item.name}</span>
+                        <div className="flex items-center gap-4 shrink-0">
+                          <span className="text-gray-300 font-mono text-sm">${item.price.toLocaleString('es-CO')}</span>
                           <button onClick={() => removeFromCart(item.id)} className="text-red-500 hover:text-red-400 p-1">
                             <Trash2 size={18} />
                           </button>
@@ -342,7 +482,7 @@ export default function App() {
                   <ShoppingCart size={20} />
                   <span>{cart.length} productos</span>
                 </div>
-                <span className="text-2xl font-bebas tracking-widest mt-1">
+                <span className="text-xl md:text-2xl font-bebas tracking-widest mt-1">
                   Total: ${cartTotal.toLocaleString('es-CO')}
                 </span>
                 <span className="text-xs text-gray-400 underline decoration-dashed mt-1">Ver detalles</span>
@@ -370,7 +510,7 @@ export default function App() {
             initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
             href={getWhatsAppLink()} 
             target="_blank" rel="noreferrer"
-            className="fixed bottom-6 right-6 z-40 bg-[#25D366] text-white p-4 rounded-full shadow-[0_0_25px_rgba(37,211,102,0.7)] hover:scale-110 transition-transform flex items-center justify-center cursor-pointer"
+            className="fixed bottom-6 right-6 z-30 bg-[#25D366] text-white p-4 rounded-full shadow-[0_0_25px_rgba(37,211,102,0.7)] hover:scale-110 transition-transform flex items-center justify-center cursor-pointer"
             style={{ animation: 'pulse 2s infinite' }}
           >
             <WhatsAppIcon size={32} />
