@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ShoppingCart, Sparkles, Copy, Check, Trash2, X } from 'lucide-react'; // Quitamos los iconos viejos de bebidas
+import { MapPin, ShoppingCart, Sparkles, Copy, Check, Trash2, X } from 'lucide-react';
 
 // ════ ICONO OFICIAL DE WHATSAPP (SVG) ════
 const WhatsAppIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
@@ -27,7 +27,7 @@ const staggerContainer: any = {
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 
-// ════ BASES DE DATOS ACTUALIZADAS CON TUS IMÁGENES ════
+// ════ BASES DE DATOS ════
 const MICHELADAS = [
   { name: "Monky Clásica", price: 11000, color: "border-neon-blue", glow: "hover:shadow-[0_0_30px_rgba(0,191,255,0.3)]", image: "/Monky Clasica.jpeg" },
   { name: "Monky Mix", price: 13000, color: "border-neon-pink", glow: "hover:shadow-[0_0_30px_rgba(255,0,184,0.3)]", image: "/Monky Mix.jpeg" },
@@ -44,7 +44,8 @@ const ENCHILADAS = [
 
 const EXTRAS = [
   { name: "Gomitas Adicionales", price: 3000 },
-  { name: "Perlas Explosivas", price: 5000 }
+  { name: "Perlas Explosivas", price: 5000 },
+  { name: "Perlas con licor", price: 7000 }
 ];
 
 const FLAVORS = [
@@ -56,8 +57,9 @@ const FLAVORS = [
 
 const INFO_BEVERAGES = ["Corona", "Ginger", "Soda", "Like", "Cuates"];
 
+// AHORA LA CLÁSICA TIENE LIKE Y CUATES HABILITADOS
 const BEVERAGES = {
-  "Monky Clásica": ["Ginger", "Soda"],
+  "Monky Clásica": ["Ginger", "Soda", "Like", "Cuates"],
   "Monky Mix": ["Ginger", "Soda", "Like", "Cuates", "Corona"],
   "Monky Supreme": ["Ginger", "Soda", "Like", "Cuates", "Corona"]
 };
@@ -107,10 +109,29 @@ export default function App() {
     setSelectedBev('');
   };
 
+  // ════ LÓGICA DE PRECIOS DINÁMICOS PARA LIKE / CUATES ════
+  const calculateModalPrice = () => {
+    if (!selectedMich) return 0;
+    let price = selectedMich.price;
+    
+    if (selectedBev === "Like" || selectedBev === "Cuates") {
+      if (selectedMich.name === "Monky Clásica" || selectedMich.name === "Monky Mix") {
+        price += 5000;
+      } else if (selectedMich.name === "Monky Supreme") {
+        price += 2000;
+      }
+    }
+    return price;
+  };
+
   const confirmMichToCart = () => {
     if (!selectedFlavor || !selectedBev || !selectedMich) return;
+    
+    // Obtenemos el precio ya calculado con el aumento
+    const finalPrice = calculateModalPrice();
     const finalName = `${selectedMich.name} (${selectedFlavor} - ${selectedBev})`;
-    addToCart(finalName, selectedMich.price);
+    
+    addToCart(finalName, finalPrice);
     setSelectedMich(null);
   };
 
@@ -187,6 +208,12 @@ export default function App() {
                        className={`px-5 py-2.5 rounded-full border ${selectedBev === b ? 'border-neon-blue bg-neon-blue/20 text-neon-blue' : 'border-white/5 bg-white/5 text-gray-300 hover:border-white/20'} transition-all text-sm font-bold`}
                      >
                        {b}
+                       {/* Pequeño indicador si aumenta el precio */}
+                       {(b === 'Like' || b === 'Cuates') && (
+                          <span className="text-[10px] ml-1 opacity-70">
+                            {selectedMich.name === 'Monky Supreme' ? '(+$2K)' : '(+$5K)'}
+                          </span>
+                       )}
                      </button>
                    ))}
                 </div>
@@ -198,7 +225,7 @@ export default function App() {
                 className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${(!selectedFlavor || !selectedBev) ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5' : 'bg-neon-pink text-white hover:bg-[#e60073] shadow-[0_0_20px_rgba(255,0,127,0.4)] border border-transparent'}`}
               >
                 <ShoppingCart size={20} />
-                Confirmar y Agregar
+                Confirmar (${calculateModalPrice().toLocaleString('es-CO')})
               </button>
             </motion.div>
           </motion.div>
@@ -268,7 +295,6 @@ export default function App() {
               key={idx} variants={fadeInUp} whileHover={{ scale: 1.05, y: -12 }}
               className={`glass-panel rounded-3xl p-8 border-t-4 ${item.color} flex flex-col items-center justify-between group transition-all duration-300 ${item.glow}`}
             >
-              {/* Aquí cambiamos el icono por la FOTO */}
               <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-black/60 mb-6 flex items-center justify-center border-2 border-white/10 overflow-hidden transition-all shadow-inner group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                 <img 
                   src={item.image} 
@@ -345,7 +371,7 @@ export default function App() {
           MONKY ENCHILADAS
         </motion.h2>
 
-        {/* FOTO DESTACADA DE ENCHILADAS */}
+        {/* FOTO DESTACADA DE ENCHILADAS CON RUTA EXACTA */}
         <motion.div 
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
           className="w-full max-w-2xl mx-auto mb-12 rounded-3xl overflow-hidden border border-neon-orange/30 shadow-[0_0_40px_rgba(255,115,0,0.15)] relative group bg-black/50"
@@ -355,7 +381,6 @@ export default function App() {
             alt="Monky Enchiladas" 
             className="w-full h-auto max-h-[350px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100"
           />
-          {/* Sombra difuminada abajo para que se mezcle con el fondo oscuro */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent pointer-events-none"></div>
         </motion.div>
 
