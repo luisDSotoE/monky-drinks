@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lora:ital,wght@0,500;0,700;1,400&family=Outfit:wght@400;500;600;700;800&family=Poppins:wght@300;400;600;800&display=swap');
 @import "tailwindcss";
 
 /* Configuración de Tokens Nativos para Tailwind v4 */
@@ -11,8 +11,18 @@
   --color-neon-orange: #FF7300;
   --color-neon-purple: #8A2BE2;
 
+  /* Colores Oficiales Mi Casa Restaurante */
+  --color-micasa-red: #C9141E;
+  --color-micasa-red-dark: #970D16;
+  --color-micasa-cream: #FFF8EF;
+  --color-micasa-green: #356B42;
+  --color-micasa-dark: #292929;
+  --color-micasa-wood: #5C3A21;
+
   --font-bebas: "Bebas Neue", sans-serif;
   --font-poppins: "Poppins", sans-serif;
+  --font-lora: "Lora", serif;
+  --font-outfit: "Outfit", sans-serif;
 }
 
 /* Efectos de Cristal Neón (Glassmorphism) */
@@ -49,14 +59,20 @@
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Estructura Base y Capa Cósmica Principal (Inspirada en el menú físico) */
+/* Estructura Base Global */
 body {
+  margin: 0;
+  padding: 0;
+  background-color: #0c0c0c;
+  font-family: 'Poppins', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ════ TEMA MONKY DRINKS: Entorno Cósmico y Neón ════ */
+.monky-page {
   background-color: #050505;
   color: white;
-  overflow-x: hidden;
-  font-family: 'Poppins', sans-serif;
-  
-  /* Capa 1: Luces Base y Nebulosa de Chispas */
+  min-height: 100vh;
   background-image: 
     radial-gradient(circle at 50% 15%, rgba(255, 214, 0, 0.18) 0%, transparent 45%),
     radial-gradient(circle at 85% 45%, rgba(0, 191, 255, 0.15) 0%, transparent 50%),
@@ -67,8 +83,7 @@ body {
   background-position: center;
 }
 
-/* Capa 2: Polvo Estelar de Colores y Brillos Densos */
-.particles-bg {
+.monky-page .particles-bg {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
   background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&q=80&w=1920');
@@ -76,12 +91,26 @@ body {
   background-position: center;
   mix-blend-mode: screen;
   opacity: 0.35;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
 }
 
-/* Normalización de Tipografía */
-h1, h2, h3, h4 {
+.monky-page h1, .monky-page h2, .monky-page h3, .monky-page h4 {
   font-family: 'Bebas Neue', sans-serif;
   letter-spacing: 2px;
+}
+
+/* ════ TEMA MI CASA RESTAURANTE: Gastronómico, Cálido y Elegante ════ */
+.micasa-page {
+  background-color: #FFF8EF;
+  color: #292929;
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+  scroll-behavior: smooth;
+  background-image: radial-gradient(#C9141E0A 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.micasa-title {
+  font-family: 'Lora', serif;
 }

@@ -1,0 +1,468 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, ShoppingCart, Sparkles, Copy, Check, X, Settings } from 'lucide-react';
+import { useCartStore } from '../store/useCartStore';
+import { useCatalogStore } from '../store/useCatalogStore';
+
+// Variantes de Animación
+const fadeInUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
+};
+
+// ════ BASES DE DATOS ════
+const MICHELADAS = [
+  { name: "Monky Clásica", price: 11000, color: "border-neon-blue", glow: "hover:shadow-[0_0_30px_rgba(0,191,255,0.3)]", image: "/Monky Clasica.jpeg" },
+  { name: "Monky Mix", price: 13000, color: "border-neon-pink", glow: "hover:shadow-[0_0_30px_rgba(255,0,184,0.3)]", image: "/Monky Mix.jpeg" },
+  { name: "Monky Supreme", price: 16000, color: "border-neon-purple", glow: "hover:shadow-[0_0_30px_rgba(138,43,226,0.3)]", image: "/Monky Suprem.jpeg" },
+  { name: "Monky Lata", price: 18000, color: "border-neon-green", glow: "hover:shadow-[0_0_30px_rgba(57,255,20,0.3)]", image: "/Monky lata.jpeg" }
+];
+
+const ENCHILADAS = [
+  { name: "Enchilada de Lulo", price: 8000 },
+  { name: "Enchilada de Mora", price: 8000 },
+  { name: "Enchilada de Limón", price: 8000 },
+  { name: "Enchilada de Naranja", price: 8000 }
+];
+
+const EXTRAS = [
+  { name: "Gomitas Adicionales", price: 3000 },
+  { name: "Perlas Explosivas", price: 5000 },
+  { name: "Perlas con licor", price: 7000 }
+];
+
+const FLAVORS = [
+  { name: "Rojo Explosivo", color: "text-red-500", border: "border-red-500", bg: "bg-red-500/20" },
+  { name: "Verde Salvaje", color: "text-neon-green", border: "border-neon-green", bg: "bg-emerald-500/20" },
+  { name: "Amarillo Tropical", color: "text-neon-yellow", border: "border-neon-yellow", bg: "bg-amber-500/20" },
+  { name: "Azul Blueberry", color: "text-blue-500", border: "border-blue-500", bg: "bg-blue-500/20" }
+];
+
+const INFO_BEVERAGES = ["Corona", "Ginger", "Soda", "Like", "Cuates"];
+
+const BEVERAGES: Record<string, string[]> = {
+  "Monky Clásica": ["Ginger", "Soda", "Like", "Cuates"],
+  "Monky Mix": ["Ginger", "Soda", "Like", "Cuates", "Corona"],
+  "Monky Supreme": ["Ginger", "Soda", "Like", "Cuates", "Corona"]
+};
+
+interface SelectedMich {
+  name: string;
+  price: number;
+}
+
+export default function MonkyDrinksPage() {
+  const { addToCart } = useCartStore();
+  const { monkyBusiness, getProductsByBusiness } = useCatalogStore();
+  const monkyProducts = getProductsByBusiness('monky').filter((p) => p.isAvailable);
+
+  const micheladasList = monkyProducts.filter((p) => p.category.toLowerCase().includes('michelada'));
+  const enchiladasList = monkyProducts.filter((p) => p.category.toLowerCase().includes('enchilada'));
+  const extrasList = monkyProducts.filter((p) => p.category.toLowerCase().includes('adicional'));
+
+  const displayMicheladas = micheladasList.length > 0 ? micheladasList : MICHELADAS;
+  const displayEnchiladas = enchiladasList.length > 0 ? enchiladasList : ENCHILADAS;
+  const displayExtras = extrasList.length > 0 ? extrasList : EXTRAS;
+
+  const [copiedNequi, setCopiedNequi] = useState(false);
+  const [selectedMich, setSelectedMich] = useState<SelectedMich | null>(null);
+  const [selectedFlavor, setSelectedFlavor] = useState<string>('');
+  const [selectedBev, setSelectedBev] = useState<string>('');
+
+  const nequiNumber = monkyBusiness.nequiNumber || "3118894341";
+
+  const handleCopyNequi = () => {
+    navigator.clipboard.writeText(nequiNumber);
+    setCopiedNequi(true);
+    setTimeout(() => setCopiedNequi(false), 2000);
+  };
+
+  const openMichModal = (mich: SelectedMich) => {
+    setSelectedMich(mich);
+    setSelectedFlavor('');
+    setSelectedBev('');
+  };
+
+  const calculateModalPrice = () => {
+    if (!selectedMich) return 0;
+    let price = selectedMich.price;
+    
+    if (selectedBev === "Like" || selectedBev === "Cuates") {
+      if (selectedMich.name === "Monky Clásica" || selectedMich.name === "Monky Mix") {
+        price += 5000;
+      } else if (selectedMich.name === "Monky Supreme") {
+        price += 2000;
+      }
+    }
+    return price;
+  };
+
+  const confirmMichToCart = () => {
+    if (!selectedFlavor || !selectedBev || !selectedMich) return;
+    
+    const finalPrice = calculateModalPrice();
+    const details = `${selectedFlavor} - ${selectedBev}`;
+    
+    addToCart({
+      id: `${selectedMich.name}-${details}`,
+      name: selectedMich.name,
+      price: finalPrice,
+      business: 'monky',
+      details,
+    });
+    
+    setSelectedMich(null);
+  };
+
+  return (
+    <div className="monky-page relative min-h-screen text-white select-none overflow-x-hidden font-poppins pb-24">
+      <div className="particles-bg"></div>
+
+      {/* ════ MODAL DE PERSONALIZACIÓN DE MICHELADAS ════ */}
+      <AnimatePresence>
+        {selectedMich && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#0a0a0a] border border-white/10 shadow-[0_0_40px_rgba(255,0,127,0.15)] rounded-3xl p-6 md:p-8 w-full max-w-md relative font-poppins"
+            >
+              <button 
+                onClick={() => setSelectedMich(null)} 
+                className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors bg-white/5 p-2 rounded-full hover:bg-white/10"
+              >
+                <X size={20}/>
+              </button>
+              
+              <h3 className="text-3xl font-bebas text-neon-yellow mb-2 pr-8 leading-none">
+                {selectedMich.name}
+              </h3>
+              <p className="text-gray-400 text-sm mb-6 pb-4 border-b border-white/10">Personaliza tu bebida para continuar</p>
+              
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="bg-white/10 w-5 h-5 rounded-full flex items-center justify-center text-white">1</span>
+                  Elige tu sabor
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                   {FLAVORS.map(f => (
+                     <button 
+                       key={f.name} 
+                       onClick={() => setSelectedFlavor(f.name)} 
+                       className={`p-3 rounded-xl border ${selectedFlavor === f.name ? f.border + ' ' + f.bg : 'border-white/5 bg-white/5 hover:border-white/20'} transition-all text-sm font-bold flex items-center justify-center text-center h-16`}
+                     >
+                       <span className={selectedFlavor === f.name ? f.color : 'text-gray-300'}>{f.name}</span>
+                     </button>
+                   ))}
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                  <span className="bg-white/10 w-5 h-5 rounded-full flex items-center justify-center text-white">2</span>
+                  Elige tu bebida
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                   {BEVERAGES[selectedMich.name]?.map(b => (
+                     <button 
+                       key={b} 
+                       onClick={() => setSelectedBev(b)} 
+                       className={`px-5 py-2.5 rounded-full border ${selectedBev === b ? 'border-neon-blue bg-neon-blue/20 text-neon-blue' : 'border-white/5 bg-white/5 text-gray-300 hover:border-white/20'} transition-all text-sm font-bold`}
+                     >
+                       {b}
+                       {(b === 'Like' || b === 'Cuates') && (
+                          <span className="text-[10px] ml-1 opacity-70">
+                            {selectedMich.name === 'Monky Supreme' ? '(+$2K)' : '(+$5K)'}
+                          </span>
+                       )}
+                     </button>
+                   ))}
+                </div>
+              </div>
+
+              <button 
+                onClick={confirmMichToCart}
+                disabled={!selectedFlavor || !selectedBev}
+                className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${(!selectedFlavor || !selectedBev) ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5' : 'bg-neon-pink text-white hover:bg-[#e60073] shadow-[0_0_20px_rgba(255,0,127,0.4)] border border-transparent'}`}
+              >
+                <ShoppingCart size={20} />
+                Confirmar (${calculateModalPrice().toLocaleString('es-CO')})
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ════ SECCIÓN HERO ════ */}
+      <section className="relative flex flex-col items-center justify-center min-h-[85vh] text-center px-4 pt-12 pb-10">
+        <motion.div 
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 120, damping: 15 }}
+          className="w-72 h-72 md:w-80 md:h-80 rounded-full glass-panel border-neon-pink border-3 box-glow-pink flex items-center justify-center mb-8 overflow-hidden bg-black/50"
+        >
+          <img src="/logo-monky.png" alt="Monky Logo" className="w-full h-full object-cover" />
+        </motion.div>
+
+        <motion.h1 
+          initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }}
+          className="text-6xl md:text-9xl font-bebas text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow via-neon-pink to-neon-blue tracking-wider leading-none mb-4"
+        >
+          MONKY FUSIÓN DRINKS
+        </motion.h1>
+
+        <motion.p 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+          className="text-xl md:text-3xl font-poppins text-gray-200 font-light max-w-2xl tracking-wide mb-8 text-glow-pink"
+        >
+          La evolución de las micheladas y Monky enchiladas
+        </motion.p>
+
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+          className="flex items-center gap-2 bg-black/70 px-6 py-2.5 rounded-full border border-neon-yellow text-neon-yellow mb-10 font-poppins font-semibold uppercase tracking-wider text-sm shadow-[0_0_15px_rgba(255,214,0,0.2)]"
+        >
+          <MapPin size={18} className="animate-bounce" />
+          <span>Chimichagua - Cesar</span>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+          className="flex flex-col sm:flex-row gap-5 z-10 font-poppins font-bold text-sm tracking-widest"
+        >
+          <a href="#menu" className="bg-neon-pink hover:bg-pink-600 text-white py-4 px-10 rounded-full box-glow-pink transition-all transform hover:scale-105 uppercase">
+            Hacer mi pedido
+          </a>
+        </motion.div>
+      </section>
+
+      {/* ════ SECCIÓN MENÚ (MICHELADAS CON FOTOS) ════ */}
+      <section id="menu" className="pt-20 pb-8 px-4 max-w-7xl mx-auto relative">
+        <motion.h2 
+          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+          className="text-6xl md:text-7xl font-bebas text-center text-neon-yellow text-glow-yellow mb-16"
+        >
+          MICHELADAS MONKEY
+        </motion.h2>
+
+        <motion.div 
+          variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 font-poppins"
+        >
+          {displayMicheladas.map((item: any, idx) => (
+            <motion.div 
+              key={item.id || idx} variants={fadeInUp} whileHover={{ scale: 1.05, y: -12 }}
+              className={`glass-panel rounded-3xl p-8 border-t-4 ${item.color || 'border-neon-pink'} flex flex-col items-center justify-between group transition-all duration-300 ${item.glow || 'hover:shadow-[0_0_30px_rgba(255,0,184,0.3)]'}`}
+            >
+              <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-black/60 mb-6 flex items-center justify-center border-2 border-white/10 overflow-hidden transition-all shadow-inner group-hover:border-white/40 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                <img 
+                  src={item.image || '/Monky Clasica.jpeg'} 
+                  alt={item.name} 
+                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-transform duration-500 group-hover:scale-110"
+                />
+              </div>
+
+              <h3 className="text-3xl font-bebas tracking-wide mb-2 text-center group-hover:text-neon-yellow transition-colors">{item.name}</h3>
+              <p className="text-2xl font-black text-gray-200 mb-8 tracking-tight">${item.price.toLocaleString('es-CO')}</p>
+              
+              <button 
+                onClick={() => {
+                  if (item.name === "Monky Lata") {
+                    addToCart({
+                      name: item.name,
+                      price: item.price,
+                      business: 'monky',
+                      image: item.image,
+                    });
+                  } else {
+                    openMichModal(item);
+                  }
+                }}
+                className="w-full py-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center gap-2 group-hover:border-none group-hover:bg-gradient-to-r group-hover:from-neon-blue group-hover:to-neon-pink text-sm font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+              >
+                <ShoppingCart size={18} /> 
+                {item.name === "Monky Lata" ? "Añadir" : "Personalizar"}
+              </button>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ════ SABORES INFORMATIVOS ════ */}
+      <section className="pt-8 pb-4 px-4 font-poppins">
+        <div className="flex flex-wrap justify-center gap-5 max-w-4xl mx-auto">
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-red-500 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] font-bold text-sm bg-red-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
+            🔥 Rojo Explosivo
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-neon-green text-neon-green box-glow-green font-bold text-sm bg-emerald-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
+            🍃 Verde Salvaje
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-neon-yellow text-neon-yellow shadow-[0_0_15px_rgba(255,214,0,0.3)] font-bold text-sm bg-amber-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
+            🌴 Amarillo Tropical
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.08 }} className="px-6 py-2.5 rounded-full border border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] font-bold text-sm bg-blue-950/20 backdrop-blur-md cursor-default tracking-wide uppercase">
+            🫐 Azul Blueberry
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════ BEBIDAS INFORMATIVAS ════ */}
+      <section className="pb-16 pt-4 px-2 font-poppins">
+        <div className="flex flex-col items-center justify-center text-center">
+          <p className="text-gray-200 font-bebas text-xl md:text-2xl tracking-widest uppercase mb-5 drop-shadow-md">
+            Acompaña tu michelada con:
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 max-w-2xl mx-auto">
+            {INFO_BEVERAGES.map((bev) => (
+              <motion.div 
+                key={bev}
+                whileHover={{ scale: 1.05 }} 
+                className="px-6 py-2.5 md:px-8 md:py-3 rounded-full border border-white/20 text-white font-extrabold text-sm md:text-base bg-white/10 backdrop-blur-md shadow-lg cursor-default tracking-widest uppercase"
+              >
+                {bev}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════ MONKY ENCHILADAS ════ */}
+      <section className="py-24 px-4 max-w-5xl mx-auto">
+        <motion.h2 
+          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+          className="text-6xl md:text-7xl font-bebas text-center text-neon-orange text-glow-orange mb-8 md:mb-10"
+        >
+          MONKY ENCHILADAS
+        </motion.h2>
+
+        <motion.div 
+          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+          className="w-full max-w-2xl mx-auto mb-12 rounded-3xl overflow-hidden border border-neon-orange/30 shadow-[0_0_40px_rgba(255,115,0,0.15)] relative group bg-black/50"
+        >
+          <img 
+            src="/Monky enchilada.jpeg" 
+            alt="Monky Enchiladas" 
+            className="w-full h-auto max-h-[350px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent pointer-events-none"></div>
+        </motion.div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 font-poppins">
+          {displayEnchiladas.map((item: any, idx) => (
+            <motion.div 
+              key={item.id || idx} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} whileHover={{ scale: 1.05 }}
+              onClick={() => addToCart({ name: item.name, price: item.price, business: 'monky' })}
+              className="glass-panel p-6 rounded-2xl border border-transparent hover:border-neon-orange/50 text-center group bg-gradient-to-b from-black/60 to-orange-950/10 hover:shadow-[0_0_25px_rgba(255,115,0,0.25)] transition-all cursor-pointer active:scale-95"
+            >
+              <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:text-neon-orange transition-colors">{item.name.replace("Enchilada de ", "")}</h3>
+              <p className="text-xl md:text-2xl font-bebas text-gray-300 group-hover:text-white tracking-widest">${item.price.toLocaleString('es-CO')}</p>
+              <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity text-neon-yellow text-sm font-bold flex justify-center items-center gap-1">
+                <ShoppingCart size={14} /> Añadir
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ════ ADICIONALES ════ */}
+      <section className="py-12 px-4 max-w-3xl mx-auto font-poppins">
+        <motion.div 
+          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+          className="glass-panel rounded-3xl p-8 border border-white/10 relative overflow-hidden bg-black/50"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 text-neon-purple"><Sparkles size={120} /></div>
+          <h2 className="text-4xl font-bebas text-neon-purple text-glow-purple mb-8 tracking-wider">Adicionales</h2>
+          <div className="flex flex-col gap-5">
+            {displayExtras.map((item: any, idx) => (
+              <div key={item.id || idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-black/60 rounded-xl border border-white/5 hover:border-neon-purple/40 transition-colors animate-float">
+                <span className="text-xl font-bold tracking-wide">{item.name}</span>
+                <div className="flex items-center justify-between sm:justify-end gap-4 mt-3 sm:mt-0">
+                  <span className="text-neon-green font-bebas text-2xl tracking-wider">+${item.price.toLocaleString('es-CO')}</span>
+                  <button 
+                    onClick={() => addToCart({ name: item.name, price: item.price, business: 'monky' })}
+                    className="bg-white/10 hover:bg-neon-purple text-white p-2 rounded-lg transition-colors"
+                  >
+                    <ShoppingCart size={20} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ════ SECCIÓN PAGOS ════ */}
+      <section className="py-12 px-4 max-w-2xl mx-auto font-poppins">
+        <div className="bg-[#111111] border border-white/5 rounded-3xl p-8 md:p-10 text-center relative overflow-hidden shadow-2xl">
+          <h3 className="text-3xl font-bebas tracking-wider mb-3 uppercase text-white">Transferencias y Efectivo</h3>
+          <p className="text-gray-300 mb-8 text-sm md:text-base max-w-md mx-auto leading-relaxed">
+            Copia nuestro número para realizar tu transferencia (Nequi/Bancolombia) o paga en efectivo al recibir el pedido.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-0 w-full max-w-sm mx-auto">
+            <div className="bg-[#050505] border border-[#222] py-4 px-5 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none flex items-center justify-center gap-3 w-full sm:w-auto">
+              <span className="text-[#FF007F] font-black text-lg tracking-tight leading-none flex items-center bg-[#FF007F]/10 px-2 py-1 rounded">
+                Nequi
+              </span>
+              <div className="w-px h-6 bg-white/10 mx-1"></div>
+              <span className="font-mono text-xl md:text-2xl tracking-widest text-white font-semibold">
+                {nequiNumber}
+              </span>
+            </div>
+            
+            <button 
+              onClick={handleCopyNequi}
+              className={`py-4 px-6 sm:rounded-r-2xl sm:rounded-bl-none rounded-b-2xl font-bold flex items-center justify-center gap-2 transition-all ${
+                copiedNequi 
+                ? 'bg-[#25D366] text-white shadow-[0_0_15px_rgba(37,211,102,0.4)]' 
+                : 'bg-[#FF007F] hover:bg-[#E60073] text-white shadow-[0_0_15px_rgba(255,0,127,0.3)]'
+              }`}
+            >
+              {copiedNequi ? <Check size={20} /> : <Copy size={20} />}
+              {copiedNequi ? 'Copiado!' : 'Copiar'}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ════ FOOTER ════ */}
+      <footer className="glass-panel mt-16 py-12 border-t border-white/5 text-center font-poppins bg-black/80">
+         <div className="flex flex-col items-center justify-center gap-5">
+          <div className="w-20 h-20 rounded-full border border-neon-blue box-glow-blue overflow-hidden p-1 bg-black">
+             <img src="/logo-monky.png" alt="Monky Logo" className="w-full h-full object-contain" />
+          </div>
+          <a 
+            href="https://instagram.com/monky_fusion_drinks" 
+            target="_blank" 
+            rel="noreferrer" 
+            className="flex items-center gap-2 text-neon-pink hover:text-white text-lg font-semibold transition-colors mt-2 text-glow-pink"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+            </svg>
+            @monky_fusion_drinks
+          </a>
+          <p className="text-gray-600 text-xs tracking-widest mt-6">Monky Fusión Drinks © 2026</p>
+          <Link
+            to="/admin/monky"
+            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-neon-pink bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors mt-2"
+          >
+            <Settings size={13} />
+            <span>⚙️ Panel de Administración Monky</span>
+          </Link>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
